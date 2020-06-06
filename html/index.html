@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>John Conway's Game of Life - Full HD</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="Highly optimized implementation of John Conway's Game of Life in Full HD"/>
+  <link rel="icon" href="./favicon.png">
+  <link rel="stylesheet" type="text/css" href="style.css">
+  <script src="lifefield.js"></script>
+  <script src="gameoflife.js"></script>
+</head>
+<body onload="Start()">
+
+  <div id="menu">
+    
+    <div class="control-button" onclick="show('info-dialog')">&#x1F6C8;</div>
+
+    <div id="control-rewind" class="control-button" onclick="rewindSimulation()">&#x23EE;</div>
+    <div id="control-pause" class="control-button" onclick="stopSimulation()">&#x23F8;</div>
+    <div id="control-start" class="control-button" onclick="startSimulation()">&#x23F5;</div>
+
+    <label for="speed">Speed:</label>
+    <select name="speed" id="speed" selected="1" onchange="selectSpeed()">
+      <option value="1">1x</option>
+      <option value="2">2x</option>
+      <option value="5">5x</option>
+      <option value="10">10x</option>
+      <option value="20">20x</option>
+      <option value="50">50x</option>
+      <option value="-1">Manual (1 step)</option>
+      <option value="-10">Manual (10 steps)</option>
+      <option value="-100">Manual (100 steps)</option>
+    </select>
+
+    <div class="action-button" onclick="showLifDialog()">Load Pattern</div>
+    <div class="action-button" onclick="show('rnd-dialog')">Random pattern</div>
+    <label class="action-button" for="file-img">Load Image</label>
+    <input type="file" id="file-img" onchange="loadImg(event)" />
+
+    <span id="performance"></span>
+  </div>
+
+  <canvas id="field" width="1920" height="1080"></canvas>
+
+  <!-- DIALOGS -->
+  <div id="info-dialog" class="dialog not-visible">
+    <p><b>Highly optimized implementation of 
+    <a href="https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life">John Conway's Game of Life</a></b></p>
+    New javascript features and bit manipulation allow to efficiently process any pattern in Full HD resolution (1920 x 1080).
+    Simulation runs at up to 250 iterations per second which is up to 10 times faster
+    than a naive implementation (depending on the pattern size).<br/>
+    <i>This is a conventional algorithm which runs simulation step-by-step.
+    For most patterns, <a href="https://en.wikipedia.org/wiki/Hashlife">Hashlife</a> algorithm is much faster.
+    Its javascript implementation be found in <a href="https://copy.sh/life/">this online simulation viewer</a>.
+    <p></p>    
+    </i>
+    Controls:<br/>
+      &nbsp; &#x23EE; rewinds field back to the original position<br/>
+      &nbsp; &#x23F5; starts simulation (for 1x - 50x speed options)
+      or makes single step of 1, 10 or 100 iterations (for manual speed option)<br />
+      &nbsp; &#x23F8; pauses running simulation <br/>
+      Pressing 'space' bar on keyboard toggles simulation: starts if it's paused or stops if it's running or makes a step if
+      manual mode is enabled<br/>
+      <p></p>
+      <b>Speed</b> control specifies number of simulation steps per frame. When it is 1x, one step is executed per frame,
+      so the speed is limited to 60 steps per second.
+      When it is 50x, 50 steps per frame are executed which results in much faster simulation at up to 250 steps per second.
+      For large patterns that take time to evolve, 5x is usually an optimal setting to allow fast simulation yet
+      keeping a decent refresh rate.<br/>
+      Last three options allow manual execution: instead of running continuously, after pressing &#x23F5; button or hitting 'space'
+      simulation only advances 1, 10 or 100 steps and then stops. Use it to investigate pattern evolution frame by frame or
+      to get to a specific generation number if needed.
+      <p></p>
+      <b>Load Pattern</b> allows to load a pattern in old <a href="https://www.conwaylife.com/wiki/Life_1.05">Life 1.05 format</a>
+      or more modern <a href="https://www.conwaylife.com/wiki/Run_Length_Encoded">RLE format</a> <br/>
+      <b>Random Pattern</b> generates random patterns of size 1920x1080 with configurable initial cell density. <br/>
+      <b>Load Image</b> generates pattern from arbitrary picture!
+    <p></p>
+    <a href="https://github.com/lightln2/LifeOhLife">Source code</a> is available under
+    <a href="https://lightln2.github.io/LifeOhLife/license.txt">MIT License</a>
+    <p></p>
+    <div class="action-button" onclick="hide('info-dialog')">Close</div>
+  </div>
+
+  <div id="lif-dialog" class="dialog not-visible">
+    <p><b>Load pattern</b> as <a href="https://www.conwaylife.com/wiki/Life_1.05">Life 1.05 format</a>
+      or <a href="https://www.conwaylife.com/wiki/Run_Length_Encoded">RLE format</a>
+    </p>
+    A huge library of patterns in rle format can be found <a href="https://copy.sh/life/examples/">here</b></a>;
+    or you can download a <a href="https://www.ibiblio.org/lifepatterns/lifep.zip">zip file</a> 
+    with over a hundred of patterns in Life 1.04 format!
+    <p></p>
+    <textarea id="lif" rows="20" cols="70">
+#Life 1.05
+#D Acorn
+#D The most vigorously growing 7-cell
+#D "methuselah" pattern. See also RABBITS.
+#N
+#P -3 -1
+.*
+...*
+**..***</textarea>
+    <p></p>
+    <div class="action-button" onclick="loadLif(); hide('lif-dialog')">Load</div>
+    <div class="action-button" onclick="hide('lif-dialog')">Cancel</div>
+  </div>
+
+  <div id="rnd-dialog" class="dialog not-visible">
+    <p><b>Generate random pattern </b></p>
+    <b>Seed</b> (starting seed for random number generator. Different values yield to different patterns):<br/>
+    <input type="text" id="rnd-seed" value="12345" placeholder="Seed" /><br/>
+    <b>Threshold</b> (probability of live cell to be generated. The lower the value, the less cells will be there):<br />
+    <input type="text" id="rnd-threshold" value="0.3" /><br />
+    <p></p>
+    <div class="action-button" onclick="loadRandom(); hide('rnd-dialog');">Load</div>
+    <div class="action-button" onclick="hide('rnd-dialog')">Cancel</div>
+  </div>
+
+</body>
+</html>

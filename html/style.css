@@ -1,0 +1,106 @@
+html, canvas {
+  padding: 0;
+  margin: 0;
+  image-rendering: pixelated;
+}
+
+body {
+  padding: 4px;
+  margin: 0;
+  background-color: #fff;
+}
+
+a {
+  cursor: pointer;
+}
+
+#menu {
+  width: 1920px;
+  height: 32px; 
+  padding-top: 4px;
+  padding-left: 10px;
+  background-color: #fff;
+}
+
+#file-img {
+  position: fixed;
+  top: -100px;
+  opacity: 0;
+}
+
+#performance {
+  font-size: 80%;
+  margin-left: 40px;
+}
+
+select {
+  cursor: pointer;
+}
+
+textarea {
+  vertical-align: text-top;
+  overflow: auto;
+  white-space: nowrap;
+}
+
+.control-button {
+  display: inline-block;
+  cursor: pointer;
+  padding: 2px;
+  width: 28px;
+  height: 24px;
+  text-align: center;
+  border-radius: 10px;
+  margin: 2px;
+}
+
+.action-button {
+  display: inline-block;
+  cursor: pointer;
+  padding: 0 10px;
+  height: 20px;
+  text-align: center;
+  border-radius: 10px;
+  border: 1.5px solid gray;
+  margin: 2px;
+}
+
+.control-button:hover {
+  background-color: #eee;  
+}
+
+.action-button:hover {
+  background-color: #eee;  
+}
+
+#info-dialog {
+  width: 650px;
+  font-size: 90%;
+}
+
+.dialog {
+  position: absolute;
+  width: 550px;
+  top: 70px;
+  left: 0;
+  right: 0;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 32px;
+  background-color: white;
+  border: 1px solid black;
+  border-radius: 16px;
+}
+
+input {
+  margin: 10px;
+  
+}
+
+.not-visible {
+  display: none;
+}
+
+.grayed {
+  color: lightgray;
+}
