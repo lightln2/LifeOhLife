@@ -1,0 +1,7 @@
+#N 16cell47487m.rle
+#C 16-cell variant of 47575M, originally found by Adam P. Goucher,
+#C   optimized by Tanner Jacobi and Aidan F. Pierce.
+#C http://conwaylife.com/wiki/47575M
+#C http://www.conwaylife.com/patterns/16cell47487m.rle
+x = 22, y = 17, rule = B3/S23
+19b3o$20bo$6bo$6bo$6bo8$11bo$o10b2o$o$obo$b2o!
