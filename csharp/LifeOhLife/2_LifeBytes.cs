@@ -17,6 +17,7 @@ namespace LifeOhLife
 
         public override void Set(int i, int j, bool value) => field[j * WIDTH + i] = (byte)(value ? 1 : 0);
 
+        /*
         public override void Step()
         {
             for (int i = 1; i < WIDTH - 1; i++)
@@ -42,5 +43,38 @@ namespace LifeOhLife
                 }
             }
         }
+        */
+
+        public override void Step()
+        {
+            for (int i = 1; i < WIDTH - 1; i++)
+            {
+                for (int j = 1; j < HEIGHT - 1; j++)
+                {
+                    int pos = j * WIDTH + i;
+                    temp[pos] = (byte)(
+                        field[pos - WIDTH - 1] + field[pos - WIDTH] + field[pos - WIDTH + 1] +
+                        field[pos - 1] + field[pos + 1] +
+                        field[pos + WIDTH - 1] + field[pos + WIDTH] + field[pos + WIDTH + 1]);
+                    bool keepAlive = field[pos] == 1 && (temp[pos] == 2 || temp[pos] == 3);
+                    bool makeNewLife = field[pos] == 0 && temp[pos] == 3;
+                    temp[pos] = (byte)(makeNewLife | keepAlive ? 1 : 0);
+                }
+            }
+
+            byte[] tmp = field;
+            field = temp;
+            temp = tmp;
+            /*
+            for (int i = 1; i < WIDTH; i++)
+            {
+                for (int j = 1; j < HEIGHT; j++)
+                {
+                    int pos = j * WIDTH + i;
+                    field[pos] = temp[pos];
+                }
+            }*/
+        }
     }
+
 }

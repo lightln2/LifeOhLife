@@ -13,104 +13,78 @@ namespace LifeOhLife
 
     public unsafe class LifeIsABitMagic : LifeJourney
     {
-        byte[] field = new byte[WIDTH + WIDTH * HEIGHT / 2];
-        byte[] temp = new byte[WIDTH + WIDTH * HEIGHT / 2];
+        const int LINE_WIDTH = WIDTH / 2;
 
-        public override bool Get(int i, int j)
+        // additional line before and after the field
+        byte[] currentField = new byte[LINE_WIDTH * (HEIGHT + 2)];
+        byte[] nextField = new byte[LINE_WIDTH * (HEIGHT + 2)];
+
+        public override bool Get(int x, int y)
         {
-            int pos = WIDTH / 2 + j * (WIDTH / 2) + (i / 2);
-            if (i % 2 == 1) return (field[pos] & 0x10) == 0x10;
-            else return (field[pos] & 1) == 1;
+            int pos = LINE_WIDTH + y * LINE_WIDTH + x / 2;
+            int offset = (x % 2) * 4;
+            ulong mask = 1ul << offset;
+            return (currentField[pos] & mask) == mask;
         }
 
-        public override void Set(int i, int j, bool val)
+        public override void Set(int x, int y, bool value)
         {
-            int pos = WIDTH / 2 + j * (WIDTH / 2) + (i / 2);
-            if (i % 2 == 1)
-            {
-                if (val) field[pos] |= 0x10;
-                else field[pos] &= (0xFF & ~0x10);
-            }
-            else
-            {
-                if (val) field[pos] |= 0x1;
-                else field[pos] &= (0xFF & ~0x1);
-            }
+            int pos = LINE_WIDTH + y * LINE_WIDTH + x / 2;
+            int offset = (x % 2) * 4;
+            byte mask = (byte)(1 << offset);
+            if (value) currentField[pos] |= mask;
+            else currentField[pos] &= (byte)~mask;
         }
 
 
         public override void Step()
         {
-            fixed (byte* fieldPtr = field, tempPtr = temp)
+            fixed(byte* currentFieldPtr = currentField, nextFieldPtr = nextField)
             {
-                for (int i = 0; i < temp.Length; i += 8)
+                for (int i = 2 * LINE_WIDTH; i < currentField.Length - 2 * LINE_WIDTH; i += 8)
                 {
-                    *(ulong*)(tempPtr + i) = 0;
-                }
+                    ulong top = *(ulong*)(currentFieldPtr + i - LINE_WIDTH);
+                    ulong center = *(ulong*)(currentFieldPtr + i);
+                    ulong bottom = *(ulong*)(currentFieldPtr + i + LINE_WIDTH);
 
-                for (int i = WIDTH; i < WIDTH * HEIGHT / 2; i += 8)
-                {
-                    ulong* ptr = (ulong*)(tempPtr + i);
+                    ulong leftTop = *(ulong*)(currentFieldPtr + i - LINE_WIDTH - 8);
+                    ulong left = *(ulong*)(currentFieldPtr + i - 8);
+                    ulong leftBottom = *(ulong*)(currentFieldPtr + i + LINE_WIDTH - 8);
 
-                    ulong src1 = *(ulong*)(fieldPtr + i - WIDTH / 2);
-                    ulong src2 = *(ulong*)(fieldPtr + i);
-                    ulong src3 = *(ulong*)(fieldPtr + i + WIDTH / 2);
+                    ulong rightTop = *(ulong*)(currentFieldPtr + i - LINE_WIDTH + 8);
+                    ulong right = *(ulong*)(currentFieldPtr + i + 8);
+                    ulong rightBottom = *(ulong*)(currentFieldPtr + i + LINE_WIDTH + 8);
 
-                    ulong src4 = *(ulong*)(fieldPtr + i - WIDTH / 2 - 8);
-                    ulong src5 = *(ulong*)(fieldPtr + i - 8);
-                    ulong src6 = *(ulong*)(fieldPtr + i + WIDTH / 2 - 8);
+                    ulong neighbours =
+                        (top >> 4) + top + (top << 4) +
+                        (center >> 4) + (center << 4) +
+                        (bottom >> 4) + bottom + (bottom << 4) +
 
-                    ulong src7 = *(ulong*)(fieldPtr + i - WIDTH / 2 + 8);
-                    ulong src8 = *(ulong*)(fieldPtr + i + 8);
-                    ulong src9 = *(ulong*)(fieldPtr + i + WIDTH / 2 + 8);
+                        (leftTop >> 60) + (left >> 60) + (leftBottom >> 60) +
+                        (rightTop << 60) + (right << 60) + (rightBottom << 60);
 
-                    *ptr += (src1 << 4) + src1 + (src1 >> 4);
-                    *ptr += (src2 << 4) + (src2 >> 4);
-                    *ptr += (src3 << 4) + src3 + (src3 >> 4);
-
-                    *ptr += (src4 >> 60) + (src5 >> 60) + (src6 >> 60);
-                    *ptr += (src7 << 60) + (src8 << 60) + (src9 << 60);
-                }
-
-                // life cell: 0001
-                // neighours:
-                // 0: 0000
-                // 1: 0001
-                // 2: 0010 ***
-                // 3: 0011 ***
-                // 4: 0100
-                // 5: 0101
-                // 6: 0110
-                // 7: 0111
-                // 8: 1000
-
-                for (int i = WIDTH; i < WIDTH * HEIGHT / 2; i += 8)
-                {
-                    ulong neighbours = *(ulong*)(tempPtr + i);
-                    ulong alive = *(ulong*)(fieldPtr + i);
-                    neighbours &= 0b0111_0111_0111_0111_0111_0111_0111_0111_0111_0111_0111_0111_0111_0111_0111_0111ul;
-
-                    ulong keepAlive = ((neighbours & ~0b0001_0001_0001_0001_0001_0001_0001_0001_0001_0001_0001_0001_0001_0001_0001_0001ul) >> 1) | (alive << 2);
-                    keepAlive ^= ~0b0101_0101_0101_0101_0101_0101_0101_0101_0101_0101_0101_0101_0101_0101_0101_0101ul;
+                    ulong alive = center;
+                    ulong mask = neighbours | (alive << 3);
+                    ulong keepAlive = (mask & 0xEEEEEEEEEEEEEEEEul) ^ 0x5555555555555555ul;
                     keepAlive &= (keepAlive >> 2);
                     keepAlive &= (keepAlive >> 1);
-                    keepAlive &= 0b0001_0001_0001_0001_0001_0001_0001_0001_0001_0001_0001_0001_0001_0001_0001_0001ul;
-
-                    ulong makeNewLife = neighbours | (alive << 3);
-                    makeNewLife ^= ~0b0011_0011_0011_0011_0011_0011_0011_0011_0011_0011_0011_0011_0011_0011_0011_0011ul;
+                    ulong makeNewLife = mask ^ 0xCCCCCCCCCCCCCCCCul;
                     makeNewLife &= (makeNewLife >> 2);
                     makeNewLife &= (makeNewLife >> 1);
-                    makeNewLife &= 0b0001_0001_0001_0001_0001_0001_0001_0001_0001_0001_0001_0001_0001_0001_0001_0001ul;
 
-                    *(ulong*)(fieldPtr + i) = keepAlive | makeNewLife;
+                    *(ulong*)(nextFieldPtr + i) = (keepAlive | makeNewLife) & 0x1111111111111111ul;
                 }
 
             }
 
-            for (int j = 0; j < HEIGHT; j++)
+            byte[] cur = currentField;
+            currentField = nextField;
+            nextField = cur;
+
+            for (int y = 0; y < HEIGHT; y++)
             {
-                Set(0, j, false);
-                Set(WIDTH - 1, j, false);
+                Set(0, y, false);
+                Set(WIDTH - 1, y, false);
             }
 
         }

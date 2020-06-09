@@ -1,22 +1,44 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace LifeOhLife
 {
     class Program
     {
-        // Every output should look like:
-        // field with 1034216 live out of 2073600 total cells initialized, hash=1583560213
-        // [life algorithm]: 88047 live cells remaining after 1000 steps in *** seconds, hash=-1752572758
+        const int STEPS = 1000;
         static void Main(string[] args)
         {
-            int steps = 1000;
-            new SimpleLife().RunPerformanceTest(steps);
-            new LifeBytes().RunPerformanceTest(steps);
-            new LongLife().RunPerformanceTest(steps);
-            new LifeIsLookingUp().RunPerformanceTest(steps);
-            new LifeInBits().RunPerformanceTest(steps);
-            new LifeIsABitMagic().RunPerformanceTest(steps);
-            new AdvancedLifeExtensions().RunPerformanceTest(steps);
+            // classical algorithms
+            RunPerformanceTests<SimpleLife>();
+            RunPerformanceTests<LifeBytes>();
+            RunPerformanceTests<LongLife>();
+            RunPerformanceTests<LifeIsLookingUp>();
+            RunPerformanceTests<LifeInBits>();
+            RunPerformanceTests<LifeIsABitMagic>();
+            RunPerformanceTests<AdvancedLifeExtensions>();
+            // algorighms dependent on field state
+            RunPerformanceTests<LifeInList>();
+            RunPerformanceTests<LifeIsChange>();
+        }
+
+        static void RunPerformanceTests<T>() where T: LifeJourney, new()
+        {
+            LifeJourney life = new T();
+            Console.WriteLine($"{life.Name}:");
+            life.GenerateRandomField(12345, 0.02);
+            int initialLiveCells = life.GetLiveCellsCount();
+            int totalCells = LifeJourney.WIDTH * LifeJourney.HEIGHT;
+            int initialHash = life.GetFingerprint();
+            Stopwatch timer = new Stopwatch();
+            timer.Start();
+            life.Run(STEPS);
+            int currentLiveCells = life.GetLiveCellsCount();
+            int currentHash = life.GetFingerprint();
+            double elapsedSeconds = timer.Elapsed.TotalSeconds;
+            double stepsPerSecond = STEPS / elapsedSeconds;
+            string infoPerformance = $"{STEPS} steps in {elapsedSeconds:0.000} seconds, {stepsPerSecond:0.000} steps/second";
+            string infoStatistics = $"Live cells:  {initialLiveCells}/{totalCells} [hash={initialHash}] -> {currentLiveCells} [{currentHash}]";
+            Console.WriteLine($"        {infoPerformance}; {infoStatistics}");
         }
     }
 }

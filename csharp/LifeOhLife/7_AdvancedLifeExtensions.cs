@@ -15,82 +15,70 @@ namespace LifeOhLife
     /// </summary>
     public unsafe class AdvancedLifeExtensions : LifeJourney
     {
-        private static readonly byte[] ONES = new byte[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
-        private static readonly byte[] TWOS = new byte[] { 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2 };
-        private static readonly byte[] THREES = new byte[] { 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3 };
+        byte[] currentField = new byte[WIDTH * HEIGHT];
+        byte[] nextField = new byte[WIDTH * HEIGHT];
         private Vector256<byte> v_1, v_2, v_3;
-
-        byte[] field = new byte[WIDTH * HEIGHT];
-        byte[] temp = new byte[WIDTH * HEIGHT];
 
         public AdvancedLifeExtensions()
         {
             if (!Avx2.IsSupported) throw new NotImplementedException("Not in this life!!!");
-            fixed (byte* ptr = ONES) v_1 = Avx.LoadVector256(ptr);
-            fixed (byte* ptr = TWOS) v_2 = Avx.LoadVector256(ptr);
-            fixed (byte* ptr = THREES) v_3 = Avx.LoadVector256(ptr);
+            
+            byte b_1 = 1, b_2 = 2, b_3 = 3;
+            v_1 = Avx2.BroadcastScalarToVector256(&b_1);
+            v_2 = Avx2.BroadcastScalarToVector256(&b_2);
+            v_3 = Avx2.BroadcastScalarToVector256(&b_3);
         }
 
-        public override bool Get(int i, int j) => field[j * WIDTH + i] == 1;
+        public override bool Get(int x, int y) => currentField[y * WIDTH + x] == 1;
 
-        public override void Set(int i, int j, bool value) => field[j * WIDTH + i] = (byte)(value ? 1 : 0);
+        public override void Set(int x, int y, bool value) => currentField[y * WIDTH + x] = (byte)(value ? 1 : 0);
 
         public override void Step()
         {
-            fixed (byte* fieldPtr = field, tempPtr = temp)
+            fixed (byte* fieldPtr = currentField, nextFieldPtr = nextField)
             {
-                Vector256<byte> zero = Vector256<byte>.Zero;
-                for (int i = 0; i < WIDTH * HEIGHT; i += 32)
-                {
-                    Avx.Store(tempPtr + i, zero);
-                }
-
                 for (int i = WIDTH; i < WIDTH * HEIGHT - WIDTH; i += 32)
                 {
-                    Vector256<byte> src1 = Avx.LoadVector256(fieldPtr + i - WIDTH - 1);
-                    Vector256<byte> src2 = Avx.LoadVector256(fieldPtr + i - WIDTH);
-                    Vector256<byte> sum1 = Avx2.Add(src1, src2);
-                    Vector256<byte> src3 = Avx.LoadVector256(fieldPtr + i - WIDTH + 1);
-                    Vector256<byte> src4 = Avx.LoadVector256(fieldPtr + i - 1);
-                    Vector256<byte> sum2 = Avx2.Add(src3, src4);
-                    Vector256<byte> src5 = Avx.LoadVector256(fieldPtr + i + 1);
-                    Vector256<byte> src6 = Avx.LoadVector256(fieldPtr + i + WIDTH - 1);
-                    Vector256<byte> sum3 = Avx2.Add(src5, src6);
-                    Vector256<byte> src7 = Avx.LoadVector256(fieldPtr + i + WIDTH);
-                    Vector256<byte> src8 = Avx.LoadVector256(fieldPtr + i + WIDTH + 1);
-                    Vector256<byte> sum4 = Avx2.Add(src7, src8);
+                    Vector256<byte> topLeft = Avx.LoadVector256(fieldPtr + i - WIDTH - 1);
+                    Vector256<byte> top = Avx.LoadVector256(fieldPtr + i - WIDTH);
+                    Vector256<byte> topRight = Avx.LoadVector256(fieldPtr + i - WIDTH + 1);
+                    Vector256<byte> left = Avx.LoadVector256(fieldPtr + i - 1);
+                    Vector256<byte> right = Avx.LoadVector256(fieldPtr + i + 1);
+                    Vector256<byte> bottomLeft = Avx.LoadVector256(fieldPtr + i + WIDTH - 1);
+                    Vector256<byte> bottom = Avx.LoadVector256(fieldPtr + i + WIDTH);
+                    Vector256<byte> bottomRight = Avx.LoadVector256(fieldPtr + i + WIDTH + 1);
+
+                    Vector256<byte> sum1 = Avx2.Add(topLeft, top);
+                    Vector256<byte> sum2 = Avx2.Add(topRight, left);
+                    Vector256<byte> sum3 = Avx2.Add(right, bottomLeft);
+                    Vector256<byte> sum4 = Avx2.Add(bottom, bottomRight);
 
                     Vector256<byte> sum5 = Avx2.Add(sum1, sum2);
                     Vector256<byte> sum6 = Avx2.Add(sum3, sum4);
-                    Vector256<byte> sum = Avx2.Add(sum5, sum6);
 
-                    Avx.Store(tempPtr + i, sum);
-                }
+                    Vector256<byte> neighbours = Avx2.Add(sum5, sum6);
 
-                for (int i = WIDTH; i < WIDTH * HEIGHT - WIDTH; i += 32)
-                {
-                    Vector256<byte> neighbours = Avx.LoadVector256(tempPtr + i);
                     Vector256<byte> alive = Avx.LoadVector256(fieldPtr + i);
 
-                    Vector256<byte> isAlive = Avx2.CompareEqual(alive, v_1);
-                    Vector256<byte> isTwoNeighbours = Avx2.CompareEqual(neighbours, v_2);
-                    Vector256<byte> isThreeNeighbours = Avx2.CompareEqual(neighbours, v_3);
-
-                    Vector256<byte> isTwoOrThreeNeighbours = Avx2.Or(isTwoNeighbours, isThreeNeighbours);
-                    Vector256<byte> aliveAndNeighbours = Avx2.And(isAlive, isTwoOrThreeNeighbours);
-
-                    Vector256<byte> shouldBeAlive = Avx2.Or(aliveAndNeighbours, isThreeNeighbours);
+                    Vector256<byte> hasTwoNeighbours = Avx2.CompareEqual(neighbours, v_2);
+                    Vector256<byte> hasThreeNeighbours = Avx2.CompareEqual(neighbours, v_3);
+                    hasThreeNeighbours = Avx2.And(hasThreeNeighbours, v_1);
+                    Vector256<byte> aliveAndTwoNeighbours = Avx2.And(alive, hasTwoNeighbours);
+                    Vector256<byte> shouldBeAlive = Avx2.Or(aliveAndTwoNeighbours, hasThreeNeighbours);
                     shouldBeAlive = Avx2.And(shouldBeAlive, v_1);
 
-                    Avx2.Store(fieldPtr + i, shouldBeAlive);
+                    Avx2.Store(nextFieldPtr + i, shouldBeAlive);
                 }
 
+                byte[] tempField = currentField;
+                currentField = nextField;
+                nextField = tempField;
             }
 
             for (int j = 1; j < HEIGHT - 1; j++)
             {
-                field[j * WIDTH] = 0;
-                field[j * WIDTH + WIDTH - 1] = 0;
+                currentField[j * WIDTH] = 0;
+                currentField[j * WIDTH + WIDTH - 1] = 0;
             }
 
         }

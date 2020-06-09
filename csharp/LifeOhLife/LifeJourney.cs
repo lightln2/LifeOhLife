@@ -32,7 +32,7 @@ namespace LifeOhLife
             for (int i = 0; i < steps; i++) Step();
         }
 
-        public void Clear()
+        public virtual void Clear()
         {
             for (int i = 1; i < WIDTH - 1; i++)
             {
@@ -86,21 +86,6 @@ namespace LifeOhLife
                 }
             }
             return hash;
-        }
-
-        // for testing / visualizing the field
-
-        public void RunPerformanceTest(int steps)
-        {
-            GenerateRandomField(12345, 0.5);
-            Console.WriteLine($"{Name}: field with {GetLiveCellsCount()} live out of {WIDTH * HEIGHT} total cells initialized, hash={GetFingerprint()}");
-            Stopwatch timer = new Stopwatch();
-            timer.Start();
-            Run(steps);
-            double elapsedSeconds = timer.Elapsed.TotalSeconds;
-            Console.WriteLine($"{Name}: {GetLiveCellsCount()} live cells remaining after {steps} steps in {elapsedSeconds:0.000} seconds, hash={GetFingerprint()}");
-            Console.WriteLine($"{Name} Performance: {(steps / elapsedSeconds):0.000} steps/sec");
-            Console.WriteLine();
         }
 
         public void SetRectangle(int startX, int startY, string pattern)

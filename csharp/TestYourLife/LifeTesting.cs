@@ -102,6 +102,7 @@ namespace TestYourLife
             Assert.AreEqual(1034216, life.GetLiveCellsCount());
             Assert.AreEqual(1583560213, life.GetFingerprint());
 
+            life.Clear();
             life.GenerateRandomField(12345, 0.1);
             Assert.AreEqual(206625, life.GetLiveCellsCount());
             Assert.AreEqual(-1430538206, life.GetFingerprint());
@@ -114,6 +115,7 @@ namespace TestYourLife
             Assert.AreEqual(565797, life.GetLiveCellsCount());
             Assert.AreEqual(-717568334, life.GetFingerprint());
 
+            life.Clear();
             life.GenerateRandomField(12345, 0.1);
             life.Step();
             Assert.AreEqual(98717, life.GetLiveCellsCount());
