@@ -122,5 +122,23 @@ namespace TestYourLife
             LifeTesting.PerformAllTests(new LifeInLine_Long());
         }
 
+        [TestMethod]
+        public void Test_LifeLine_LongCompressed()
+        {
+            LifeTesting.PerformAllTests(new LifeInLine_LongCompressed());
+        }
+
+        [TestMethod]
+        public void Test_7_AdvancedLifeExtensionsInLine()
+        {
+            LifeTesting.PerformAllTests(new AdvancedLifeExtensionsInLine());
+        }
+
+        [TestMethod]
+        public void Test_7_AdvancedLifeExtensionsInLineCompressed()
+        {
+            LifeTesting.PerformAllTests(new AdvancedLifeExtensionsInLineCompressed());
+        }
+
     }
 }

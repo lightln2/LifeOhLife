@@ -18,6 +18,7 @@ namespace LifeOhLife
         byte[] currentField = new byte[2* WIDTH + WIDTH * HEIGHT];
         byte[] nextField = new byte[2 * WIDTH + WIDTH * HEIGHT];
         private Vector256<byte> v_1, v_2, v_3;
+        private Vector256<byte> v_lookup;
 
         public AdvancedLifeExtensions()
         {
@@ -27,6 +28,15 @@ namespace LifeOhLife
             v_1 = Avx2.BroadcastScalarToVector256(&b_1);
             v_2 = Avx2.BroadcastScalarToVector256(&b_2);
             v_3 = Avx2.BroadcastScalarToVector256(&b_3);
+            byte[] lookup = new byte[]
+            {
+                0, 0, 0, 1, 0, 0, 0, 0,
+                0, 0, 1, 1, 0, 0, 0, 0,
+
+                0, 0, 0, 1, 0, 0, 0, 0,
+                0, 0, 1, 1, 0, 0, 0, 0
+            };
+            fixed (byte* ptr = lookup) v_lookup = Avx2.LoadVector256(ptr);
         }
 
         public override bool Get(int x, int y) => currentField[WIDTH + y * WIDTH + x] == 1;
@@ -52,20 +62,23 @@ namespace LifeOhLife
                     Vector256<byte> sum2 = Avx2.Add(topRight, left);
                     Vector256<byte> sum3 = Avx2.Add(right, bottomLeft);
                     Vector256<byte> sum4 = Avx2.Add(bottom, bottomRight);
-
                     Vector256<byte> sum5 = Avx2.Add(sum1, sum2);
                     Vector256<byte> sum6 = Avx2.Add(sum3, sum4);
 
                     Vector256<byte> neighbours = Avx2.Add(sum5, sum6);
-
                     Vector256<byte> alive = Avx.LoadVector256(fieldPtr + i);
 
-                    Vector256<byte> hasTwoNeighbours = Avx2.CompareEqual(neighbours, v_2);
-                    Vector256<byte> hasThreeNeighbours = Avx2.CompareEqual(neighbours, v_3);
-                    hasThreeNeighbours = Avx2.And(hasThreeNeighbours, v_1);
-                    Vector256<byte> aliveAndTwoNeighbours = Avx2.And(alive, hasTwoNeighbours);
-                    Vector256<byte> shouldBeAlive = Avx2.Or(aliveAndTwoNeighbours, hasThreeNeighbours);
-                    shouldBeAlive = Avx2.And(shouldBeAlive, v_1);
+                    alive = Avx2.ShiftLeftLogical(alive.AsUInt64(), (byte)3).AsByte();
+                    Vector256<byte> mask = Avx2.Or(neighbours, alive);
+                    Vector256<byte> shouldBeAlive = Avx2.Shuffle(v_lookup, mask);
+
+                    //Vector256<byte> hasTwoNeighbours = Avx2.CompareEqual(neighbours, v_2);
+                    //Vector256<byte> hasThreeNeighbours = Avx2.CompareEqual(neighbours, v_3);
+                    //hasThreeNeighbours = Avx2.And(hasThreeNeighbours, v_1);
+                    //Vector256<byte> aliveAndTwoNeighbours = Avx2.And(alive, hasTwoNeighbours);
+                    //Vector256<byte> shouldBeAlive = Avx2.Or(aliveAndTwoNeighbours, hasThreeNeighbours);
+                    //shouldBeAlive = Avx2.And(shouldBeAlive, v_1);
+                    
                     Avx2.Store(nextFieldPtr + i, shouldBeAlive);
                 }
 

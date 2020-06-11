@@ -5,12 +5,12 @@ using System.Text;
 namespace LifeOhLife
 {
     /// <summary>
-    /// Improves determining if cells are gonna live or die, like in LifeIsPredetermined,
-    /// but uses bit manipulation instead of table lookups
+    /// Uses upper-, center- and lower lines instead of temporary buffer; 
+    /// handles 8 bytes per at once
     /// </summary>
     public unsafe class LifeInLine_Long : LifeJourney
     {
-        byte[] currentField = new byte[WIDTH * HEIGHT + 1];
+        byte[] field = new byte[WIDTH * HEIGHT + 1];
 
         byte[] upperLineSumOf2 = new byte[WIDTH];
         byte[] upperLineSumOf3 = new byte[WIDTH];
@@ -19,14 +19,14 @@ namespace LifeOhLife
         byte[] lowerLineSumOf2 = new byte[WIDTH];
         byte[] lowerLineSumOf3 = new byte[WIDTH];
 
-        public override bool Get(int i, int j) => currentField[j * WIDTH + i] == 1;
+        public override bool Get(int i, int j) => field[j * WIDTH + i] == 1;
 
-        public override void Set(int i, int j, bool value) => currentField[j * WIDTH + i] = (byte)(value ? 1 : 0);
+        public override void Set(int i, int j, bool value) => field[j * WIDTH + i] = (byte)(value ? 1 : 0);
 
         public override void Step()
         {
             fixed (byte* 
-                         currentFieldPtr = currentField,
+                         currentFieldPtr = field,
                          upperLineSumOf2Ptr = upperLineSumOf2,
                          upperLineSumOf3Ptr = upperLineSumOf3,
                          middleLineSumOf2Ptr = middleLineSumOf2,
@@ -73,14 +73,14 @@ namespace LifeOhLife
                         ulong alive = *(ulong*)(middle3 + x) - *(ulong*)(middle2 + x);
 
                         ulong mask = neighbours | (alive << 3);
-                        ulong keepAlive = (mask & 0xEEEEEEEEEEEEEEEEul) ^ 0x5555555555555555ul;
+                        ulong keepAlive = (mask & 0x0E0E0E0E0E0E0E0Eul) ^ 0x0505050505050505ul;
                         keepAlive &= (keepAlive >> 2);
                         keepAlive &= (keepAlive >> 1);
-                        ulong makeNewLife = mask ^ 0xCCCCCCCCCCCCCCCCul;
+                        ulong makeNewLife = mask ^ 0x0C0C0C0C0C0C0C0Cul;
                         makeNewLife &= (makeNewLife >> 2);
                         makeNewLife &= (makeNewLife >> 1);
 
-                        *(ulong*)(nextLinePtr - WIDTH + x) = (keepAlive | makeNewLife) & 0x1111111111111111ul;
+                        *(ulong*)(nextLinePtr - WIDTH + x) = (keepAlive | makeNewLife) & 0x0101010101010101ul;
                     }
 
                     *(byte*)(nextLinePtr - WIDTH) = 0;

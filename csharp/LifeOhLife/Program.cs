@@ -8,7 +8,7 @@ namespace LifeOhLife
         static void Main(string[] args)
         {
             int steps = 1000;
-            // classical algorithms
+            // classical algorithms        
             RunPerformanceTests<SimpleLife>(steps);
             RunPerformanceTests<LifeBytes>(steps);
             RunPerformanceTests<LongLife>(steps);
@@ -16,12 +16,15 @@ namespace LifeOhLife
             RunPerformanceTests<LifeInBits>(steps);
             RunPerformanceTests<LifeIsABitMagic>(steps);
             RunPerformanceTests<AdvancedLifeExtensions>(steps);
-            // algorighms dependent on field state
-            RunPerformanceTests<LifeInList>(steps);
-            RunPerformanceTests<LifeIsChange>(steps);
+            RunPerformanceTests<AdvancedLifeExtensionsInLine>(steps);
+            RunPerformanceTests<AdvancedLifeExtensionsInLineCompressed>(steps);
             // algorithms using upper/center/lower lines instead of a temporary buffer
             RunPerformanceTests<LifeInLine_Bytes>(steps);
             RunPerformanceTests<LifeInLine_Long>(steps);
+            RunPerformanceTests<LifeInLine_LongCompressed>(steps);
+            // algorighms dependent on field state
+            RunPerformanceTests<LifeInList>(steps);
+            RunPerformanceTests<LifeIsChange>(steps);
         }
 
         static void RunPerformanceTests<T>(int steps) where T: LifeJourney, new()

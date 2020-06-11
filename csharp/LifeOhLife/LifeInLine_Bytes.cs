@@ -4,9 +4,12 @@ using System.Text;
 
 namespace LifeOhLife
 {
+    /// <summary>
+    /// Uses upper-, center- and lower lines instead of temporary buffer
+    /// </summary>
     public class LifeInLine_Bytes : LifeJourney
     {
-        byte[] currentField = new byte[WIDTH * HEIGHT];
+        byte[] field = new byte[WIDTH * HEIGHT];
 
         byte[] upperLineSumOf2 = new byte[WIDTH];
         byte[] upperLineSumOf3 = new byte[WIDTH];
@@ -15,9 +18,9 @@ namespace LifeOhLife
         byte[] lowerLineSumOf2 = new byte[WIDTH];
         byte[] lowerLineSumOf3 = new byte[WIDTH];
 
-        public override bool Get(int x, int y) => currentField[y * WIDTH + x] == 1;
+        public override bool Get(int x, int y) => field[y * WIDTH + x] == 1;
 
-        public override void Set(int x, int y, bool value) => currentField[y * WIDTH + x] = (byte)(value ? 1 : 0);
+        public override void Set(int x, int y, bool value) => field[y * WIDTH + x] = (byte)(value ? 1 : 0);
 
         public override void Step()
         {
@@ -26,8 +29,8 @@ namespace LifeOhLife
             for (int x = 1; x < WIDTH - 1; x++)
             {
                 centerLineSumOf2[x] = centerLineSumOf3[x] = 0;
-                lowerLineSumOf2[x] = (byte)(currentField[nextLineIndex + x - 1] + currentField[nextLineIndex + x + 1]);
-                lowerLineSumOf3[x] = (byte)(lowerLineSumOf2[x] + currentField[nextLineIndex + x]);
+                lowerLineSumOf2[x] = (byte)(field[nextLineIndex + x - 1] + field[nextLineIndex + x + 1]);
+                lowerLineSumOf3[x] = (byte)(lowerLineSumOf2[x] + field[nextLineIndex + x]);
             }
 
             for (int y = 1; y < HEIGHT - 1; y++)
@@ -45,12 +48,12 @@ namespace LifeOhLife
 
                 int left;
                 int center = 0;
-                int right = currentField[nextLineIndex + 1];
+                int right = field[nextLineIndex + 1];
                 for (int x = 1; x < WIDTH - 1; x++)
                 {
                     left = center;
                     center = right;
-                    right = currentField[nextLineIndex + x + 1];
+                    right = field[nextLineIndex + x + 1];
                     lowerLineSumOf2[x] = (byte)(left + right);
                     lowerLineSumOf3[x] = (byte)(left + center + right);
 
@@ -58,7 +61,7 @@ namespace LifeOhLife
                     bool alive = centerLineSumOf3[x] - centerLineSumOf2[x] == 1;
                     bool aliveAndTwoNeighbours = alive && neighbours == 2;
 
-                    currentField[nextLineIndex - WIDTH + x] = (byte)(aliveAndTwoNeighbours | neighbours == 3 ? 1 : 0);
+                    field[nextLineIndex - WIDTH + x] = (byte)(aliveAndTwoNeighbours | neighbours == 3 ? 1 : 0);
                 }
             }
         }
