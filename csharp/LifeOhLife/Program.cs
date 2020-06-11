@@ -5,38 +5,41 @@ namespace LifeOhLife
 {
     class Program
     {
-        const int STEPS = 1000;
         static void Main(string[] args)
         {
+            int steps = 1000;
             // classical algorithms
-            RunPerformanceTests<SimpleLife>();
-            RunPerformanceTests<LifeBytes>();
-            RunPerformanceTests<LongLife>();
-            RunPerformanceTests<LifeIsLookingUp>();
-            RunPerformanceTests<LifeInBits>();
-            RunPerformanceTests<LifeIsABitMagic>();
-            RunPerformanceTests<AdvancedLifeExtensions>();
+            RunPerformanceTests<SimpleLife>(steps);
+            RunPerformanceTests<LifeBytes>(steps);
+            RunPerformanceTests<LongLife>(steps);
+            RunPerformanceTests<LifeIsLookingUp>(steps);
+            RunPerformanceTests<LifeInBits>(steps);
+            RunPerformanceTests<LifeIsABitMagic>(steps);
+            RunPerformanceTests<AdvancedLifeExtensions>(steps);
             // algorighms dependent on field state
-            RunPerformanceTests<LifeInList>();
-            RunPerformanceTests<LifeIsChange>();
+            RunPerformanceTests<LifeInList>(steps);
+            RunPerformanceTests<LifeIsChange>(steps);
+            // algorithms using upper/center/lower lines instead of a temporary buffer
+            RunPerformanceTests<LifeInLine_Bytes>(steps);
+            RunPerformanceTests<LifeInLine_Long>(steps);
         }
 
-        static void RunPerformanceTests<T>() where T: LifeJourney, new()
+        static void RunPerformanceTests<T>(int steps) where T: LifeJourney, new()
         {
             LifeJourney life = new T();
             Console.WriteLine($"{life.Name}:");
-            life.GenerateRandomField(12345, 0.02);
+            life.GenerateRandomField(12345, 0.5);
             int initialLiveCells = life.GetLiveCellsCount();
             int totalCells = LifeJourney.WIDTH * LifeJourney.HEIGHT;
             int initialHash = life.GetFingerprint();
             Stopwatch timer = new Stopwatch();
             timer.Start();
-            life.Run(STEPS);
+            life.Run(steps);
             int currentLiveCells = life.GetLiveCellsCount();
             int currentHash = life.GetFingerprint();
             double elapsedSeconds = timer.Elapsed.TotalSeconds;
-            double stepsPerSecond = STEPS / elapsedSeconds;
-            string infoPerformance = $"{STEPS} steps in {elapsedSeconds:0.000} seconds, {stepsPerSecond:0.000} steps/second";
+            double stepsPerSecond = steps / elapsedSeconds;
+            string infoPerformance = $"{steps} steps in {elapsedSeconds:0.000} seconds, {stepsPerSecond:0.000} steps/second";
             string infoStatistics = $"Live cells:  {initialLiveCells}/{totalCells} [hash={initialHash}] -> {currentLiveCells} [{currentHash}]";
             Console.WriteLine($"        {infoPerformance}; {infoStatistics}");
         }

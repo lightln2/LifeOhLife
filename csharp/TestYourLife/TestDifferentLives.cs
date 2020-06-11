@@ -110,5 +110,17 @@ namespace TestYourLife
             LifeTesting.PerformAllTests(new LifeIsChange());
         }
 
+        [TestMethod]
+        public void Test_LifeLine_Bytes()
+        {
+            LifeTesting.PerformAllTests(new LifeInLine_Bytes());
+        }
+
+        [TestMethod]
+        public void Test_LifeLine_Long()
+        {
+            LifeTesting.PerformAllTests(new LifeInLine_Long());
+        }
+
     }
 }

@@ -34,11 +34,11 @@ namespace LifeOhLife
 
         public virtual void Clear()
         {
-            for (int i = 1; i < WIDTH - 1; i++)
+            for (int x = 1; x < WIDTH - 1; x++)
             {
-                for (int j = 1; j < HEIGHT - 1; j++)
+                for (int y = 1; y < HEIGHT - 1; y++)
                 {
-                    Set(i, j, false);
+                    Set(x, y, false);
                 }
             }
         }
@@ -46,12 +46,12 @@ namespace LifeOhLife
         public void GenerateRandomField(int seedForRandom, double threshold)
         {
             Random rand = new Random(seedForRandom);
-            for (int i = 1; i < WIDTH - 1; i++)
+            for (int x = 1; x < WIDTH - 1; x++)
             {
-                for (int j = 1; j < HEIGHT - 1; j++)
+                for (int y = 1; y < HEIGHT - 1; y++)
                 {
                     bool isLiveCell = rand.NextDouble() < threshold;
-                    Set(i, j, isLiveCell);
+                    Set(x, y, isLiveCell);
                 }
             }
         }
@@ -59,11 +59,11 @@ namespace LifeOhLife
         public int GetLiveCellsCount()
         {
             int count = 0;
-            for (int i = 1; i < WIDTH - 1; i++)
+            for (int x = 1; x < WIDTH - 1; x++)
             {
-                for (int j = 1; j < HEIGHT - 1; j++)
+                for (int y = 1; y < HEIGHT - 1; y++)
                 {
-                    if (Get(i, j)) count++;
+                    if (Get(x, y)) count++;
                 }
             }
             return count;
@@ -74,14 +74,14 @@ namespace LifeOhLife
         public int GetFingerprint()
         {
             int hash = 0;
-            for (int i = 1; i < WIDTH - 1; i++)
+            for (int x = 1; x < WIDTH - 1; x++)
             {
-                for (int j = 1; j < HEIGHT - 1; j++)
+                for (int y = 1; y < HEIGHT - 1; y++)
                 {
-                    if (Get(i, j))
+                    if (Get(x, y))
                     {
-                        hash = hash * 31 + i;
-                        hash = hash * 31 + j;
+                        hash = hash * 31 + x;
+                        hash = hash * 31 + y;
                     }
                 }
             }
@@ -91,11 +91,11 @@ namespace LifeOhLife
         public void SetRectangle(int startX, int startY, string pattern)
         {
             string[] lines = pattern.Trim().Split('\n').Select(p => p.Trim()).ToArray();
-            for (int i = 0; i < lines.Length; i++)
+            for (int x = 0; x < lines.Length; x++)
             {
-                for (int j = 0; j < lines[i].Length; j++)
+                for (int y = 0; y < lines[x].Length; y++)
                 {
-                    Set(startX + j, startY + i, lines[i][j] == 'x');
+                    Set(startX + y, startY + x, lines[x][y] == 'x');
                 }
             }
         }
@@ -103,11 +103,11 @@ namespace LifeOhLife
         public string GetRectangle(int startX, int startY, int lenX, int lenY)
         {
             StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < lenY; i++)
+            for (int x = 0; x < lenY; x++)
             {
-                for (int j = 0; j < lenX; j++)
+                for (int y = 0; y < lenX; y++)
                 {
-                    bool isAlive = Get(startX + j, startY + i);
+                    bool isAlive = Get(startX + y, startY + x);
                     sb.Append(isAlive ? 'x' : '-');
                 }
                 sb.AppendLine();
@@ -118,14 +118,14 @@ namespace LifeOhLife
         public void TestRectangle(int startX, int startY, string pattern)
         {
             string[] lines = pattern.Split('\n').Select(l => l.Trim()).ToArray();
-            for (int i = 0; i < lines.Length; i++)
+            for (int x = 0; x < lines.Length; x++)
             {
-                for (int j = 0; j < lines[i].Length; j++)
+                for (int y = 0; y < lines[x].Length; y++)
                 {
-                    bool isAlive = Get(startX + j, startY + i);
-                    if (lines[i][j] != (isAlive ? 'x' : '-'))
+                    bool isAlive = Get(startX + y, startY + x);
+                    if (lines[x][y] != (isAlive ? 'x' : '-'))
                     {
-                        throw new Exception($"{lines[i][j]} expected at ({startX + j}, {startY + i})");
+                        throw new Exception($"{lines[x][y]} expected at ({startX + y}, {startY + x})");
                     }
                 }
             }

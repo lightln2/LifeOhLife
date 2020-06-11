@@ -14,7 +14,7 @@ namespace LifeOhLife
         bool[,] field = new bool[WIDTH, HEIGHT];
         bool[,] temp = new bool[WIDTH, HEIGHT];
 
-        public override bool Get(int i, int j) => field[i, j];
+        public override bool Get(int x, int y) => field[x, y];
 
         public override void Set(int i, int j, bool value) => field[i, j] = value;
 
@@ -47,7 +47,7 @@ namespace LifeOhLife
                     field[i, j] = temp[i, j];
                 }
             }
-
+            
         }
     }
 }

@@ -15,8 +15,8 @@ namespace LifeOhLife
     /// </summary>
     public unsafe class AdvancedLifeExtensions : LifeJourney
     {
-        byte[] currentField = new byte[WIDTH * HEIGHT];
-        byte[] nextField = new byte[WIDTH * HEIGHT];
+        byte[] currentField = new byte[2* WIDTH + WIDTH * HEIGHT];
+        byte[] nextField = new byte[2 * WIDTH + WIDTH * HEIGHT];
         private Vector256<byte> v_1, v_2, v_3;
 
         public AdvancedLifeExtensions()
@@ -29,15 +29,15 @@ namespace LifeOhLife
             v_3 = Avx2.BroadcastScalarToVector256(&b_3);
         }
 
-        public override bool Get(int x, int y) => currentField[y * WIDTH + x] == 1;
+        public override bool Get(int x, int y) => currentField[WIDTH + y * WIDTH + x] == 1;
 
-        public override void Set(int x, int y, bool value) => currentField[y * WIDTH + x] = (byte)(value ? 1 : 0);
+        public override void Set(int x, int y, bool value) => currentField[WIDTH + y * WIDTH + x] = (byte)(value ? 1 : 0);
 
         public override void Step()
         {
             fixed (byte* fieldPtr = currentField, nextFieldPtr = nextField)
             {
-                for (int i = WIDTH; i < WIDTH * HEIGHT - WIDTH; i += 32)
+                for (int i = 2 * WIDTH; i < currentField.Length - 2 * WIDTH; i += 32)
                 {
                     Vector256<byte> topLeft = Avx.LoadVector256(fieldPtr + i - WIDTH - 1);
                     Vector256<byte> top = Avx.LoadVector256(fieldPtr + i - WIDTH);
@@ -66,7 +66,6 @@ namespace LifeOhLife
                     Vector256<byte> aliveAndTwoNeighbours = Avx2.And(alive, hasTwoNeighbours);
                     Vector256<byte> shouldBeAlive = Avx2.Or(aliveAndTwoNeighbours, hasThreeNeighbours);
                     shouldBeAlive = Avx2.And(shouldBeAlive, v_1);
-
                     Avx2.Store(nextFieldPtr + i, shouldBeAlive);
                 }
 
@@ -75,10 +74,10 @@ namespace LifeOhLife
                 nextField = tempField;
             }
 
-            for (int j = 1; j < HEIGHT - 1; j++)
+            for (int y = 1; y < HEIGHT - 1; y++)
             {
-                currentField[j * WIDTH] = 0;
-                currentField[j * WIDTH + WIDTH - 1] = 0;
+                currentField[WIDTH + y * WIDTH] = 0;
+                currentField[WIDTH + y * WIDTH + WIDTH - 1] = 0;
             }
 
         }

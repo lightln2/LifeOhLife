@@ -39,42 +39,26 @@ namespace LifeOhLife
                     *ptr += *(ulong*)(fieldPtr + i + WIDTH + 1);
                 }
 
-                // life cell: 0000-0001
-                // neighours:
-                // 0: 0000-0000
-                // 1: 0000-0001
-                // 2: 0000-0010 ***
-                // 3: 0000-0011 ***
-                // 4: 0000-0100
-                // 5: 0000-0101
-                // 6: 0000-0110
-                // 7: 0000-0111
-                // 8: 0000-1000
-
                 for (int i = WIDTH; i < WIDTH * HEIGHT - WIDTH; i += 8)
                 {
                     ulong neighbours = *(ulong*)(tempPtr + i);
                     ulong alive = *(ulong*)(fieldPtr + i);
-                    // 8 neighbours => 0 neighbours. After this, only last 3 bits are important
+                    // 8 neighbours behaves same as 0 neighbours, so, fourth bit can be discarded!
                     neighbours &= 0b00000111_00000111_00000111_00000111_00000111_00000111_00000111_00000111ul;
+                    // mask combines count of neighbours in last three bits and 'alive' flag in fourth bit
+                    // valid combinations for the cell to live are 0010, 0011, 1011; others cause cell to be dead in next gen.
+                    ulong mask = neighbours | (alive << 3);
 
-                    //neighbours = 000 ... 111;
-
-                    ulong aliveAndNeighbours = ((neighbours & ~0b00000001_00000001_00000001_00000001_00000001_00000001_00000001_00000001ul) >> 1) | (alive << 2);
-                    // should only be 0000-0101
-                    aliveAndNeighbours ^= ~0b00000101_00000101_00000101_00000101_00000101_00000101_00000101_00000101ul;
-                    aliveAndNeighbours &= (aliveAndNeighbours >> 2);
-                    aliveAndNeighbours &= (aliveAndNeighbours >> 1);
-                    aliveAndNeighbours &= 0b00000001_00000001_00000001_00000001_00000001_00000001_00000001_00000001ul;
-
-                    ulong makeNewLife = neighbours | (alive << 3);
-                    // should only be 0000-0011
-                    makeNewLife ^= ~0b00000011_00000011_00000011_00000011_00000011_00000011_00000011_00000011ul;
+                    ulong keepAlive = mask & 0b00001110_00001110_00001110_00001110_00001110_00001110_00001110_00001110ul;
+                    keepAlive ^= 0b00000101_00000101_00000101_00000101_00000101_00000101_00000101_00000101ul;
+                    keepAlive &= (keepAlive >> 2);
+                    keepAlive &= (keepAlive >> 1);
+                    keepAlive &= 0b00000001_00000001_00000001_00000001_00000001_00000001_00000001_00000001ul;
+                    ulong makeNewLife = mask ^ 0b00001100_00001100_00001100_00001100_00001100_00001100_00001100_00001100ul;
                     makeNewLife &= (makeNewLife >> 2);
                     makeNewLife &= (makeNewLife >> 1);
                     makeNewLife &= 0b00000001_00000001_00000001_00000001_00000001_00000001_00000001_00000001ul;
-
-                    *(ulong*)(fieldPtr + i) = aliveAndNeighbours | makeNewLife;
+                    * (ulong*)(fieldPtr + i) = keepAlive | makeNewLife;
                 }
 
             }

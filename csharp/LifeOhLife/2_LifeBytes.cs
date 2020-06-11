@@ -10,70 +10,33 @@ namespace LifeOhLife
     /// </summary>
     public class LifeBytes : LifeJourney
     {
-        byte[] field = new byte[WIDTH * HEIGHT];
-        byte[] temp = new byte[WIDTH * HEIGHT];
+        byte[] currentField = new byte[WIDTH * HEIGHT];
+        byte[] nextField = new byte[WIDTH * HEIGHT];
 
-        public override bool Get(int i, int j) => field[j * WIDTH + i] == 1;
+        public override bool Get(int x, int y) => currentField[y * WIDTH + x] == 1;
 
-        public override void Set(int i, int j, bool value) => field[j * WIDTH + i] = (byte)(value ? 1 : 0);
-
-        /*
-        public override void Step()
-        {
-            for (int i = 1; i < WIDTH - 1; i++)
-            {
-                for (int j = 1; j < HEIGHT - 1; j++)
-                {
-                    int pos = j * WIDTH + i;
-                    temp[pos] = (byte)(
-                        field[pos - WIDTH - 1] + field[pos - WIDTH] + field[pos - WIDTH + 1] +
-                        field[pos - 1] + field[pos + 1] +
-                        field[pos + WIDTH - 1] + field[pos + WIDTH] + field[pos + WIDTH + 1]);
-                }
-            }
-
-            for (int i = 1; i < WIDTH; i++)
-            {
-                for (int j = 1; j < HEIGHT; j++)
-                {
-                    int pos = j * WIDTH + i;
-                    bool keepAlive = field[pos] == 1 && (temp[pos] == 2 || temp[pos] == 3);
-                    bool makeNewLife = field[pos] == 0 && temp[pos] == 3;
-                    field[pos] = (byte)(makeNewLife | keepAlive ? 1 : 0);
-                }
-            }
-        }
-        */
+        public override void Set(int x, int y, bool value) => currentField[y * WIDTH + x] = (byte)(value ? 1 : 0);
 
         public override void Step()
         {
-            for (int i = 1; i < WIDTH - 1; i++)
+            for (int x = 1; x < WIDTH - 1; x++)
             {
-                for (int j = 1; j < HEIGHT - 1; j++)
+                for (int y = 1; y < HEIGHT - 1; y++)
                 {
-                    int pos = j * WIDTH + i;
-                    temp[pos] = (byte)(
-                        field[pos - WIDTH - 1] + field[pos - WIDTH] + field[pos - WIDTH + 1] +
-                        field[pos - 1] + field[pos + 1] +
-                        field[pos + WIDTH - 1] + field[pos + WIDTH] + field[pos + WIDTH + 1]);
-                    bool keepAlive = field[pos] == 1 && (temp[pos] == 2 || temp[pos] == 3);
-                    bool makeNewLife = field[pos] == 0 && temp[pos] == 3;
-                    temp[pos] = (byte)(makeNewLife | keepAlive ? 1 : 0);
+                    int pos = y * WIDTH + x;
+                    nextField[pos] = (byte)(
+                        currentField[pos - WIDTH - 1] + currentField[pos - WIDTH] + currentField[pos - WIDTH + 1] +
+                        currentField[pos - 1] + currentField[pos + 1] +
+                        currentField[pos + WIDTH - 1] + currentField[pos + WIDTH] + currentField[pos + WIDTH + 1]);
+                    bool keepAlive = currentField[pos] == 1 && (nextField[pos] == 2 || nextField[pos] == 3);
+                    bool makeNewLife = currentField[pos] == 0 && nextField[pos] == 3;
+                    nextField[pos] = (byte)(makeNewLife | keepAlive ? 1 : 0);
                 }
             }
 
-            byte[] tmp = field;
-            field = temp;
-            temp = tmp;
-            /*
-            for (int i = 1; i < WIDTH; i++)
-            {
-                for (int j = 1; j < HEIGHT; j++)
-                {
-                    int pos = j * WIDTH + i;
-                    field[pos] = temp[pos];
-                }
-            }*/
+            byte[] tmp = currentField;
+            currentField = nextField;
+            nextField = tmp;
         }
     }
 
