@@ -19,6 +19,9 @@ namespace LifeOhLife
         public const int WIDTH = 1920;
         public const int HEIGHT = 1080;
 
+        //public const int WIDTH = 1024;
+        //public const int HEIGHT = 1024;
+
         public string Name => GetType().Name;
 
         public abstract void Set(int i, int j, bool value);

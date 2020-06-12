@@ -7,6 +7,7 @@ namespace LifeOhLife
     {
         static void Main(string[] args)
         {
+            
             int steps = 1000;
             // classical algorithms        
             RunPerformanceTests<SimpleLife>(steps);
@@ -25,9 +26,15 @@ namespace LifeOhLife
             // algorighms dependent on field state
             RunPerformanceTests<LifeInList>(steps);
             RunPerformanceTests<LifeIsChange>(steps);
+            
+
+            // Baseline:
+            RunBenchmark<SimpleLife>();
+            // As fast as we can get:
+            RunBenchmark<AdvancedLifeExtensionsInLineCompressed>();
         }
 
-        static void RunPerformanceTests<T>(int steps) where T: LifeJourney, new()
+        public static void RunPerformanceTests<T>(int steps) where T: LifeJourney, new()
         {
             LifeJourney life = new T();
             Console.WriteLine($"{life.Name}:");
@@ -42,9 +49,39 @@ namespace LifeOhLife
             int currentHash = life.GetFingerprint();
             double elapsedSeconds = timer.Elapsed.TotalSeconds;
             double stepsPerSecond = steps / elapsedSeconds;
-            string infoPerformance = $"{steps} steps in {elapsedSeconds:0.000} seconds, {stepsPerSecond:0.000} steps/second";
+            double mcellsPerSecond = stepsPerSecond * LifeJourney.WIDTH * LifeJourney.HEIGHT / 1_000_000;
+            string infoPerformance = $"{steps} steps in {elapsedSeconds:0.000} seconds, {stepsPerSecond:0.000} steps/second ({mcellsPerSecond:0.} M cells/sec)";
             string infoStatistics = $"Live cells:  {initialLiveCells}/{totalCells} [hash={initialHash}] -> {currentLiveCells} [{currentHash}]";
             Console.WriteLine($"        {infoPerformance}; {infoStatistics}");
         }
+
+        public static void RunBenchmark<T>() where T : LifeJourney, new()
+        {
+            LifeJourney life = new T();
+            Console.Write($"{life.Name}: ");
+            life.GenerateRandomField(12345, 0.5);
+            RunWhile(life, 5);
+            life = new T();
+            life.GenerateRandomField(12345, 0.5);
+            double stepsPerSecond = RunWhile(life, 10);
+            double mcellsPerSecond = stepsPerSecond * LifeJourney.WIDTH * LifeJourney.HEIGHT / 1_000_000;
+            Console.WriteLine($"{stepsPerSecond:0.000} steps/second ({mcellsPerSecond:0.} M cells/sec)");
+        }
+
+
+        static double RunWhile(LifeJourney life, int seconds)
+        {
+            int steps = 0;
+            TimeSpan wait = TimeSpan.FromSeconds(seconds);
+            Stopwatch timer = new Stopwatch();
+            timer.Start();
+            do
+            {
+                life.Run(100);
+                steps += 100;
+            } while (timer.Elapsed < wait);
+            return steps / timer.Elapsed.TotalSeconds;
+        }
+
     }
 }
